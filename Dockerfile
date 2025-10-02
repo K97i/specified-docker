@@ -20,4 +20,6 @@ USER www-data
 FROM alseambusher/crontab-ui AS cronjobs
 COPY ./src/delete-files.sh /src/delete-files.sh
 COPY ./src/config/held_files /src/config/held_files
+COPY ./crontab-root /etc/crontabs/root
+COPY ./crontab.db /crontab-ui/crontabs/crontab.db
 RUN apk update && apk add bash nano

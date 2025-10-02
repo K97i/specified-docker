@@ -1,0 +1,1 @@
+{"name":"Purge Data","command":"\"/src/delete-files.sh\"","schedule":"* * * * *","stopped":false,"timestamp":"Thu Oct 02 2025 15:42:58 GMT+0000 (Coordinated Universal Time)","logging":"false","mailing":{},"created":1759419778611,"saved":true,"_id":"J9ssohUbhYWrubwe"}
