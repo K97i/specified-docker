@@ -11,9 +11,9 @@ COPY ./docker-php.conf /etc/apache2/conf-available/docker-php.conf
 
 RUN a2enmod rewrite
 
-RUN chown -R www-data /src
-RUN chmod -R 766 /src
-RUN chmod -R 666 /src/files
+# RUN chown -R www-data /src
+# RUN chmod -R 766 /src
+# RUN chmod -R 666 /src/files
 
 USER www-data
 
