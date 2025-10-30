@@ -8,7 +8,7 @@ cd $SCRIPT_DIR
 HELD_FILES_LIST="$SCRIPT_DIR/config/held_files"
 
 # get files older than 24 hours
-OLD_FILES=$( find $SCRIPT_DIR/files -mindepth 1 -mtime +1 -type f )
+OLD_FILES=$( find $SCRIPT_DIR/files -mindepth 1 -mtime +0 -type f )
 
 for fileName in $OLD_FILES
 do  

@@ -20,8 +20,8 @@ services:
     build:
       context: ./
       target: cronjobs
-    ports:
-      - 5102:8000
+#    ports:
+#      - 5102:8000
     volumes:
       - specify-files:/src/files
       - specify-cron-db:/crontab-ui/crontabs/
