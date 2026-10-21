@@ -1,5 +1,5 @@
 # PHP stuff
-FROM php:8.5.12-apache AS webserver
+FROM php:8.4.27-apache AS webserver
 
 RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
