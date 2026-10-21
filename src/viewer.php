@@ -31,31 +31,22 @@ include('common.php');
 $eoldata = json_decode(file_get_contents('https://endoflife.date/api/windows.json'), true);
 $validversions = '';
 $latestver = '';
-$found10 = false;
 $found11 = false;
 
 // Set Latest Version
 foreach ($eoldata as $eolitem) {
-    // Windows 10
-    if (!(bool) $eolitem['lts'] 
-        && !str_contains($eolitem['cycle'], '-e')
-        && str_contains($eolitem['cycle'], '10') 
-        && $found10 === false) {
-        $latestver = $latestver . $eolitem['latest'] . ' ';
-        $found10 = true;
-    }
-
     // Windows 11
     if (!(bool) $eolitem['lts']
         && !str_contains($eolitem['cycle'], '-e')
         && str_contains($eolitem['cycle'], '11') 
-        && $found11 == false) {
+        && $found11 == false
+        && !str_contains($eolitem['latest'], '10.0.28000')) {
         $latestver = $latestver . $eolitem['latest'] . ' ';
         $found11 = true;
     }
 
     // Break out of loop
-    if ($found10 == true && $found11 == true) {
+    if ($found11 == true) {
         break;
     }
 }
@@ -681,7 +672,6 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                                                 <thead>
                                                                     <tr>
                                                                         <th scope="col">Name</th>
-                                                                        <th scope="col">VRAM</th>
                                                                         <th scope="col">Resolution</th>
                                                                         <th scope="col">Refresh Rate</th>
                                                                     </tr>
@@ -689,13 +679,11 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                                                 <tbody>';
 
                                                 foreach ($json_data['Hardware']['Gpu'] as $gpu) {
-                                                    $vram = $gpu['AdapterRAM'] / 1048576 . ' MB';
                                                     $res = $gpu['CurrentHorizontalResolution'] . ' x ' . $gpu['CurrentVerticalResolution'];
                                                     $refrate = $gpu['CurrentRefreshRate'] . 'Hz';
 
                                                     $html .= '<tr>
                                                                     <td>' . $gpu['Description'] . '</td>
-                                                                    <td>' . $vram . '</td>
                                                                     <td>' . $res . '</td>
                                                                     <td>' . $refrate . '</td>
                                                                 </tr>';
@@ -883,16 +871,18 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                         <div class="green">
 
                                             <?php
+                                            // the displayed adapter is the first one which has an IP address, or if none have an IP, then the first physical adapter.
                                             $adapterText = "Disconnected";
 
                                             foreach ($json_data['Network']['Adapters'] as $adapter) {
                                                 if ((bool) $adapter['PhysicalAdapter'] && is_array($adapter['IPAddress']) && count($adapter['IPAddress']) > 0) {
                                                     $adapterText = $adapter['Description'];
+                                                    $foundAdapter = true;
                                                     break;
                                                 }
                                             };
 
-                                            if ($adapter == "") {
+                                            if (!$foundAdapter) {
                                                 foreach ($json_data['Network']['Adapters'] as $adapter) {
                                                     if ((bool) $adapter['PhysicalAdapter']) {
                                                         $adapterText = $adapter['Description'];
@@ -1213,7 +1203,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                     $part_size = $part['PartitionCapacity'];
                                     $part_taken = $part_size - $part['PartitionFree'];
                                     $part_display = "";
-                                    if (!empty($part['PartitionLabel'])) {
+                                    if ($part['PartitionLabel'] !== '') {
                                         $part_display .= $part['PartitionLabel'];
                                         if (isset($part['PartitionLetter'])) {
                                             $part_display .= " ({$part['PartitionLetter']})";
@@ -1221,7 +1211,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                     } else if (isset($part['PartitionLetter'])) { // and not partition label
                                         $part_display = $part['PartitionLetter'];
                                     }
-                                    if (!empty($part_display))
+                                    if ($part_display !== '')
                                         $part_display .= '<br/>';
                                     $fs_display = $part['Filesystem'] ?? 'Unknown';
 
@@ -1233,7 +1223,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                             ' . $fs_display . '<br/>
                                             ' . "$part_taken / $part_size MB Used" . '
                                         </span>
-                                        <div class="progress-bar partition-space-bar" style="width: ' . $part_taken / $part_size * 100 . '%;"></div>
+                                        <div class="progress-bar partition-space-bar" style="width: ' . ($part_size > 0 ? $part_taken / $part_size * 100 : 0) . '%;"></div>
                                     </div>
                                     ';
                                 }
@@ -1384,6 +1374,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                     </div>
                                 </div>
                             </div>
+                            <!-- Temperature widget disabled
                             <div class="widget widget-temps hover" type="button" data-mdb-toggle="modal" data-mdb-target="#temps-modal">
                                 <h1>Temps</h1>
                                 <div class="widget-values">
@@ -1415,6 +1406,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                     </div>
                                 </div>
                             </div>
+                            -->
                             <div class="widget widget-audio hover" type="button" data-mdb-toggle="modal" data-mdb-target="#audio-modal">
                                 <h1>Audio Devices</h1>
                                 <div class="widget-values">
@@ -1608,7 +1600,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                     ';
                                 }
 
-                                if (!empty($json_data['Hardware']['Batteries'])) {
+                                if (count($json_data['Hardware']['Batteries']) > 0) {
                                     foreach ($json_data['Hardware']['Batteries'] as $battery) {
                                         $cap = floatval($battery["Remaining_Life_Percentage"]);
                                         if (
@@ -1627,7 +1619,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                 foreach ($json_data['Hardware']['Storage'] as $disk) {
                                     foreach ($disk['Partitions'] as $partNum => $part) {
                                         if (isset($part['DirtyBitSet']) && $part['DirtyBitSet']) {
-                                            if (empty($part['PartitionLetter'])) {
+                                            if ($part['PartitionLetter'] === '') {
                                                 $noteshtml .= "
                                                 <p>
                                                     Dirty bit set on <span>partition $partNum ({$disk['DeviceName']})</span>
@@ -1701,7 +1693,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
 
 
 
-                                if (!empty($noteshtml)) {
+                                if ($noteshtml !== '') {
                                     $noteshtml = '<br>' . $noteshtml;
                                     echo $noteshtml;
                                 }
@@ -1747,7 +1739,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                     $driveKey += 1;
                                 }
 
-                                if (!empty($drivehtml)) {
+                                if ($drivehtml !== '') {
                                     $drivehtml = '<br> <h4 style="margin:5px; color:var(--meta-h4-color);">Drive / SMART Notes</h4>' . $drivehtml;
                                     echo $drivehtml;
                                 }
@@ -1766,7 +1758,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
 
                                 foreach ($json_data['System']['ChoiceRegistryValues'] as $regkey) {
 
-                                    if ($regkey['Value'] && !in_array($regkey['Value'], $defaultRegKeys[$regkey['Name']])){
+                                    if ($regkey['Value'] && !in_array($regkey['Value'], $defaultRegKeys[$regkey['Name']], true)){
                                         $reghtml .= '
                                             <p>
                                                 Registry Value <span>' . $regkey['Name'] . '</span> found set, value of <span>' . $regkey['Value'] . '</span>
@@ -1775,7 +1767,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
 
                                 }
 
-                                if (!empty($reghtml)) {
+                                if ($reghtml !== '') {
                                     $reghtml = '<br> <h4 style="margin:5px; color:var(--meta-h4-color);">Notable Registry Changes</h4>' . $reghtml;
                                     echo $reghtml;
                                 }
@@ -1786,7 +1778,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                 <?php
                                 $puphtml = '';
 
-                                if (!empty($pupsfoundInstalled)) {
+                                if (count($pupsfoundInstalled) > 0) {
 
                                     $puphtml .= '<h4>Notable Software found Installed</h4>';
 
@@ -1799,7 +1791,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                     $puphtml .= '</table>';
                                 }
 
-                                if (!empty($pupsfoundRunning)) {
+                                if (count($pupsfoundRunning) > 0) {
 
                                     $puphtml .= '<h4>Notable Software found Running</h4>';
 
@@ -1812,7 +1804,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                     $puphtml .= '</table>';
                                 }
 
-                                if (!empty($puphtml)) {
+                                if ($puphtml !== '') {
                                     echo $puphtml;
                                 } else {
                                     echo '<h4>No Notable Software found, yay!</h4>';
@@ -1913,7 +1905,7 @@ $pupsfoundRunning = array_filter($referenceListRunning, function($checkobj) use 
                                                         </div>
                                                         <div class="modal-body" id="browser-container' . $browser['Name'] . '">';
                                                             foreach ($browser['Profiles'] as $browserprofile) {
-                                                                $profileKey = array_search($browserprofile, $browser['Profiles']);
+                                                                $profileKey = array_search($browserprofile, $browser['Profiles'], true);
                                                                 echo '
                                                             <h2>' . $browser['Name'] . ' Profile "' . $browser['Profiles'][$profileKey]['name'] . '"</h2>
                                                             <table id="' . $browser['Name'] . 'Profile' . $profileKey . 'Table" class="table">

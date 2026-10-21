@@ -18,7 +18,6 @@
         "XFast LAN", // messes with network
         "Driver Easy", // driver updater
         "CCleaner", // debloater
-        "Wondershare", // "Adware with popups and shills, even after uninstalling it will still give you ads and popups constantly." - KayZ
         "Vanguard", // Kernel-level Anti-cheat, causes system instability
         "Battleye", // Kernel-level Anti-cheat, causes system instability
         "WinAero", // tweaker
@@ -34,7 +33,6 @@
         "Wave Browser", // "It's a chromium-based web browser that pushes ad notifications, reported by many AVs to be a PUP as well." - Adam
         "LogiLDA", // adware
         "TLauncher", // "Known token stealer, potential malware." - TheRublixCube
-        "Lunar Client", // Shady, privacy policy allows for stealing "search history", stole code, etc.
         "BoosterX", // tweaker
         "iTop", // vpn
         "Wallpaper Engine", // can mess up ui
@@ -52,7 +50,18 @@
         "cleaner", // blanket for debloater
         "Speedify", // messes with network
         "UltraUXThemePatcher", // can mess up ui
-        "Lockdown Browser" // has messed up windows power plans and other things https://discord.com/channels/749314018837135390/749316166878625843/1298020309881847849
+        "Lockdown Browser", // has messed up windows power plans and other things https://discord.com/channels/749314018837135390/749316166878625843/1298020309881847849
+        "KMSpico", // Known windows activation tool likely malware
+        "optimizer",  // generic catch all for optimizer/tweaker tools - martin311
+        "booster",     // generic catch all for optimizer/tweaker tools - martin311
+        "TranslucentTB", // Theming tool, can cause UI issues - exstacy
+        "Windhawk",      // Theming tool, can cause UI issues - exstacy
+        "Rainmeter",    // Theming tool, can cause UI issues - martin311
+        "TaskbarX",    // Theming tool, can cause UI issues - martin311
+        "Open-Shell",    // Theming tool, can cause UI issues - martin311
+        "AOMEI",       // Catch-all for the AOMEI software suite, can cause OS issues - exstacydemon
+        "StartAllBack",    // Theming tool, can cause UI issues - martin311
+        "SteelSeries GG"   // Can mess with audio - martin311
     ];
 
     $biosCharacteristics = [

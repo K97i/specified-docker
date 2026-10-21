@@ -29,26 +29,18 @@
 
     // Set Latest Version
     foreach ($eoldata as $eolitem) {
-        // Windows 10
-        if (!$eolitem['lts']
-            && !str_contains($eolitem['cycle'], '-e')
-            && str_contains($eolitem['cycle'], '10')
-            && $found10 === false) {
-            $latestver = $latestver . $eolitem['latest'] . ' ';
-            $found10 = true;
-        }
-
         // Windows 11
-        if (!$eolitem['lts']
+        if (!(bool) $eolitem['lts']
             && !str_contains($eolitem['cycle'], '-e')
-            && str_contains($eolitem['cycle'], '11')
-            && $found11 == false) {
+            && str_contains($eolitem['cycle'], '11') 
+            && $found11 == false
+            && !str_contains($eolitem['latest'], '10.0.28000')) {
             $latestver = $latestver . $eolitem['latest'] . ' ';
             $found11 = true;
         }
 
         // Break out of loop
-        if ($found10 == true && $found11 == true) {
+        if ($found11 == true) {
             break;
         }
     }
@@ -366,7 +358,7 @@
         foreach ($json_data['Hardware']['Storage'] as $disk) {
             foreach ($disk['Partitions'] as $partNum => $part) {
                 if (isset($part['DirtyBitSet']) && $part['DirtyBitSet']) {
-                    if (empty($part['PartitionLetter'])) {
+                    if ($part['PartitionLetter'] === '') {
                         echo "
     <li>
         Dirty bit set on <span>partition $partNum ({$disk['DeviceName']})</span>
@@ -433,7 +425,7 @@
 
         foreach ($json_data['System']['ChoiceRegistryValues'] as $regkey) {
 
-            if ($regkey['Value'] && !in_array($regkey['Value'], $defaultRegKeys[$regkey['Name']])) {
+            if ($regkey['Value'] && !in_array($regkey['Value'], $defaultRegKeys[$regkey['Name']], true)) {
                 echo "
     <li>
         Registry Value <span>{$regkey['Name']}</span> found set, value of <span>{$regkey['Value']}</span>
@@ -737,7 +729,6 @@
     <thead>
         <tr>
             <th scope="col">Name</th>
-            <th scope="col">VRAM</th>
             <th scope="col">Resolution</th>
             <th scope="col">Refresh Rate</th>
         </tr>
@@ -748,7 +739,6 @@
                 echo '
         <tr>
             <td>' . $gpu['Description'] . '</td>
-            <td>' . $gpu['AdapterRAM'] / pow(2, 20) . ' MB' . '</td>
             <td>' . $gpu['CurrentHorizontalResolution'] . ' x ' . $gpu['CurrentVerticalResolution'] . '</td>
             <td>' . $gpu['CurrentRefreshRate'] . 'Hz' . '</td>
         </tr>';
@@ -887,9 +877,9 @@
 <h1>Storage</h1>
 <?php
     $drives_amount = safe_count($json_data['Hardware']['Storage']);
-    $driveKey = 0;
 
-    foreach ($json_data['Hardware']['Storage'] as $driveKey => $drive) {
+
+    foreach ($json_data['Hardware']['Storage'] as $drive) {
         $drive_size_raw = $drive['DiskCapacity'];
         $drive_free_raw = getDriveFree($drive);
         $drive_taken_raw = $drive_size_raw - $drive_free_raw;
@@ -897,14 +887,14 @@
         $drive_taken = floor(bytesToGigabytes($drive_taken_raw));
         // the drive size can sometimes be z ero if the drive is failing
         if ($drive_taken != 0 && $drive_size != 0) {
-            $drive_percentage = round((float)$drive_taken / (float)$drive_size * 100);
+            $drive_percentage = round($drive_taken / $drive_size * 100);
         } else $drive_percentage = 0;
 
         $letters = array_filter(
             array_column($drive['Partitions'], 'PartitionLetter')
         );
         $lettersString = implode(", ", $letters);
-        $lettersStringDisplay = empty($lettersString) ? '' : "($lettersString)";
+        $lettersStringDisplay = ($lettersString === '') ? '' : "($lettersString)";
 
         echo '
     <h2 class="item-header">' . $drive['DeviceName'] . '</h2>
@@ -938,7 +928,7 @@
             $part_size_mb = bytesToMegabytes($part_size);
             $part_taken_mb = ceil(bytesToMegabytes($part_taken));
             $part_display = "";
-            if (!empty($part['PartitionLabel'])) {
+            if ($part['PartitionLabel'] !== '') {
                 $part_display .= $part['PartitionLabel'];
                 if (isset($part['PartitionLetter'])) {
                     $part_display .= " ({$part['PartitionLetter']})";
@@ -946,7 +936,7 @@
             } else if (isset($part['PartitionLetter'])) { // and not partition label
                 $part_display = $part['PartitionLetter'];
             }
-            if (!empty($part_display))
+            if ($part_display !== '')
                 $part_display .= '<br/>';
             $fs_display = $part['Filesystem'] ?? 'Unknown';
 
@@ -1153,7 +1143,7 @@
         } else $default_browser = '';
 
         foreach ($browser['Profiles'] as $profile):
-            $profile_key = array_search($profile, $browser['Profiles']);
+            $profile_key = array_search($profile, $browser['Profiles'], true);
             ?>
             <h2 class="item-header"><?= $browser['Name'] ?> Profile
                 "<?= $profile['name'] /* This is lowercase in the json for some reason */ ?>"</h2>
