@@ -3,18 +3,18 @@
 # https://stackoverflow.com/a/1482133
 SCRIPT_DIR=$(dirname -- "$( readlink -f -- "$0"; )")
 
-cd $SCRIPT_DIR
+cd "$SCRIPT_DIR" || exit 1
 
 HELD_FILES_LIST="$SCRIPT_DIR/config/held_files"
+FILES_DIR="$SCRIPT_DIR/files"
 
-# get files older than 24 hours
-OLD_FILES=$( find $SCRIPT_DIR/files -mindepth 1 -mtime +0 -type f )
+touch "$HELD_FILES_LIST"
 
-for fileName in $OLD_FILES
-do  
+find "$FILES_DIR" -mindepth 1 -mtime +0 -type f | while IFS= read -r fileName; do 
   if grep -Fxq "$fileName" "$HELD_FILES_LIST"; then
     echo "$fileName held"
   else
-    rm $fileName
+    rm -- "$fileName"
+    echo "$fileName deleted"
   fi
 done
